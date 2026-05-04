@@ -1,0 +1,129 @@
+# REQUIREMENT 1: Create a single list with the raw employee data
+raw_data = [
+    1121, "Jackie Grainger", 22.22,
+    1122, "Jignesh Thrakkar", 25.25,
+    1127, "Dion Green", 28.75, False,
+    24.32, 1132, "Jacob Gerber",
+    "Sarah Sanderson", 23.45, 1137, True,
+    "Brandon Heck", 1138, 25.84, True,
+    1152, "David Toma", 22.65,
+    23.75, 1157, "Charles King", False,
+    "Jackie Grainger", 1121, 22.22, False,
+    22.65, 1152, "David Toma"
+]
+
+# REQUIREMENT 2 & 3: Sort data into a list of dictionaries
+# (database-like format) with no duplicates
+
+# Strategy: walk through raw_data and collect int (ID), str (name), and float (wage) for each employee, skipping bool values entirely.
+# We build each record by finding the three typed values that belong together, then deduplicate by employee ID.
+
+employees = []
+seen_ids  = set()
+
+i = 0
+while i < len(raw_data):
+    item = raw_data[i]
+
+    # booleans are a subclass of int in Python, so check bool FIRST
+    if isinstance(item, bool):
+        i += 1
+        continue
+
+    if isinstance(item, int):
+        emp_id = item
+        emp_name = None
+        emp_wage = None
+
+        # Scan ahead for the matching name and wage (skip bools)
+        j = i + 1
+        while j < len(raw_data) and (emp_name is None or emp_wage is None):
+            ahead = raw_data[j]
+            if isinstance(ahead, bool):
+                j += 1
+                continue
+            if isinstance(ahead, str) and emp_name is None:
+                emp_name = ahead
+                j += 1
+                continue
+            if isinstance(ahead, float) and emp_wage is None:
+                emp_wage = ahead
+                j += 1
+                continue
+            # Hit another int — a new record starts; stop scanning
+            if isinstance(ahead, int):
+                break
+            j += 1
+
+        # Only add if we found all three fields AND it is not a duplicate
+        if emp_name is not None and emp_wage is not None:
+            if emp_id not in seen_ids:
+                seen_ids.add(emp_id)
+                employees.append({
+                    "employee_id": emp_id,
+                    "name":        emp_name,
+                    "hourly_wage": emp_wage
+                })
+
+    i += 1
+
+# REQUIREMENT 4: Calculate total_hourly_rate (wage × 1.3) and add it to each dictionary
+               
+
+for emp in employees:
+    emp["total_hourly_rate"] = round(emp["hourly_wage"] * 1.3, 4)
+
+
+# REQUIREMENT 5: Collect employees whose total_hourly_rate is between 28.15 and 30.65 → underpaid_salaries
+              
+underpaid_salaries = []
+
+for emp in employees:
+    if emp["total_hourly_rate"] > 28.15 and emp["total_hourly_rate"] < 30.65:
+        underpaid_salaries.append(emp)
+
+# REQUIREMENT 6: Calculate raises based on hourly_wage brackets and build company_raises list of dictionaries
+                
+company_raises = []
+
+for emp in employees:
+    wage = emp["hourly_wage"]
+
+    if wage > 22 and wage < 24:
+        raise_amount = round(wage * 0.05, 4)
+    elif wage >= 24 and wage < 26:
+        raise_amount = round(wage * 0.04, 4)
+    elif wage >= 26 and wage < 28:
+        raise_amount = round(wage * 0.03, 4)
+    else:
+        raise_amount = round(wage * 0.02, 4)
+
+    company_raises.append({
+        "name":         emp["name"],
+        "raise_amount": raise_amount
+    })
+
+# REQUIREMENT 7: Print all three lists
+
+print("=" * 60)
+print("ALL EMPLOYEES  (employees list)")
+print("=" * 60)
+for emp in employees:
+    print(emp)
+
+print()
+print("=" * 60)
+print("UNDERPAID SALARIES  (total hourly rate between $28.15–$30.65)")
+print("=" * 60)
+if underpaid_salaries:
+    for emp in underpaid_salaries:
+        print(emp)
+else:
+    print("No employees found in that range.")
+
+print()
+print("=" * 60)
+print("COMPANY RAISES  (company_raises list)")
+print("=" * 60)
+for record in company_raises:
+    print(record)
